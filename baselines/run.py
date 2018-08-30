@@ -1,5 +1,5 @@
 import sys
-import multiprocessing 
+import multiprocessing
 import os.path as osp
 import gym
 from collections import defaultdict
@@ -209,25 +209,25 @@ def main():
         logger.configure(format_strs = [])
         rank = MPI.COMM_WORLD.Get_rank()
 
-    model, _ = train(args, extra_args)
+    with tf.Session(graph=tf.Graph()):
+        model, _ = train(args, extra_args)
 
-    if args.save_path is not None and rank == 0:
-        save_path = osp.expanduser(args.save_path)
-        model.save(save_path)
+        if args.save_path is not None and rank == 0:
+            save_path = osp.expanduser(args.save_path)
+            model.save(save_path)
 
+        if args.play:
+            logger.log("Running trained model")
+            env = build_env(args)
+            obs = env.reset()
+            while True:
+                actions = model.step(obs)[0]
+                obs, _, done, _  = env.step(actions)
+                env.render()
+                done = done.any() if isinstance(done, np.ndarray) else done
 
-    if args.play:
-        logger.log("Running trained model")
-        env = build_env(args)
-        obs = env.reset()
-        while True:
-            actions = model.step(obs)[0]
-            obs, _, done, _  = env.step(actions)
-            env.render()
-            done = done.any() if isinstance(done, np.ndarray) else done
-
-            if done:
-                obs = env.reset()
+                if done:
+                    obs = env.reset()
 
 
 
