@@ -244,11 +244,13 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
     if load_path is not None:
         model.load(load_path)
     runner = Runner(env=env, model=model, nsteps=nsteps, gamma=gamma, lam=lam)
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | runner: {runner}')
 
     epinfobuf = deque(maxlen=100)
     tfirststart = time.time()
 
     nupdates = total_timesteps//nbatch
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | runner: {runner} | epinfobuf: {epinfobuf} | nupdates: {nupdates} | total_timesteps: {total_timesteps} | nbatch: {nbatch}')
     for update in range(1, nupdates+1):
         assert nbatch % nminibatches == 0
         tstart = time.time()
@@ -282,7 +284,7 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
                     slices = (arr[mbflatinds] for arr in (obs, returns, masks, actions, values, neglogpacs))
                     mbstates = states[mbenvinds]
                     mblossvals.append(model.train(lrnow, cliprangenow, *slices, mbstates))
-
+        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals: {mblossvals}')
         lossvals = np.mean(mblossvals, axis=0)
         tnow = time.time()
         fps = int(nbatch / (tnow - tstart))
