@@ -1,3 +1,4 @@
+import sys
 import tensorflow as tf
 from baselines.common import tf_util
 from baselines.a2c.utils import fc
@@ -9,6 +10,7 @@ from baselines.common.models import get_network_builder
 
 import gym
 
+IS_DEBUG = True
 
 class PolicyWithValue(object):
     """
@@ -32,7 +34,7 @@ class PolicyWithValue(object):
         **tensors       tensorflow tensors for additional attributes such as state or mask
 
         """
-            
+
         self.X = observations
         self.state = tf.constant([])
         self.initial_state = None
@@ -85,7 +87,7 @@ class PolicyWithValue(object):
         -------
         (action, value estimate, next state, negative log likelihood of the action under current policy parameters) tuple
         """
-    
+
         a, v, state, neglogp = self._evaluate([self.action, self.vf, self.state, self.neglogp], observation, **extra_feed)
         if state.size == 0:
             state = None
@@ -106,14 +108,14 @@ class PolicyWithValue(object):
         -------
         value estimate
         """
-        return self._evaluate(self.vf, ob, *args, **kwargs)      
+        return self._evaluate(self.vf, ob, *args, **kwargs)
 
     def save(self, save_path):
         tf_util.save_state(save_path, sess=self.sess)
 
     def load(self, load_path):
         tf_util.load_state(load_path, sess=self.sess)
-  
+
 def build_policy(env, policy_network, value_network=None,  normalize_observations=False, estimate_q=False, **policy_kwargs):
     if isinstance(policy_network, str):
         network_type = policy_network
@@ -123,7 +125,7 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
         ob_space = env.observation_space
 
         X = observ_placeholder if observ_placeholder is not None else observation_placeholder(ob_space, batch_size=nbatch)
-        
+
         extra_tensors = {}
 
         if normalize_observations and X.dtype == tf.float32:
@@ -144,7 +146,9 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
                 policy_latent, recurrent_tensors = policy_network(encoded_x, nenv)
                 extra_tensors.update(recurrent_tensors)
 
-            
+            if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | policy_latent: {policy_latent}')
+
+
         _v_net = value_network
 
         if _v_net is None or _v_net == 'shared':
@@ -154,10 +158,10 @@ def build_policy(env, policy_network, value_network=None,  normalize_observation
                 _v_net = policy_network
             else:
                 assert callable(_v_net)
- 
+
             with tf.variable_scope('vf', reuse=tf.AUTO_REUSE):
                 vf_latent, _ = _v_net(encoded_x)
-        
+
         policy = PolicyWithValue(
             env=env,
             observations=X,
@@ -176,4 +180,3 @@ def _normalize_clip_observation(x, clip_range=[-5.0, 5.0]):
     rms = RunningMeanStd(shape=x.shape[1:])
     norm_x = tf.clip_by_value((x - rms.mean) / rms.std, min(clip_range), max(clip_range))
     return norm_x, rms
-    
