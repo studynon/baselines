@@ -285,6 +285,7 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
                     mbstates = states[mbenvinds]
                     mblossvals.append(model.train(lrnow, cliprangenow, *slices, mbstates))
         if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals: {mblossvals}')
+        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals[-1]: {mblossvals[-1]}')
         lossvals = np.mean(mblossvals, axis=0)
         tnow = time.time()
         fps = int(nbatch / (tnow - tstart))
