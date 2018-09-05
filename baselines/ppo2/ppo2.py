@@ -27,6 +27,9 @@ class Model(object):
         with tf.variable_scope('ppo2_model', reuse=tf.AUTO_REUSE):
             act_model = policy(nbatch_act, 1, sess)
             train_model = policy(nbatch_train, nsteps, sess)
+            if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | nbatch_act: {nbatch_act} | nbatch_train: {nbatch_train} | nsteps: {nsteps}')
+            if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | act_model: {act_model}')
+            if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | train_model: {train_model}')
 
         A = train_model.pdtype.sample_placeholder([None])
         ADV = tf.placeholder(tf.float32, [None])
