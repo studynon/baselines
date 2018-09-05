@@ -46,16 +46,24 @@ _game_envs['retro'] = set([
 
 def train(args, extra_args):
     env_type, env_id = get_env_type(args.env)
-    if IS_DEBUG: print(f'env_type: {env_type}\nenv_id: {env_id}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name}\nenv_type: {env_type}\nenv_id: {env_id}')
 
     total_timesteps = int(args.num_timesteps)
+    if IS_DEBUG: print(f'total_timesteps: {total_timesteps}')
     seed = args.seed
+    if IS_DEBUG: print(f'seed: {seed}')
 
     learn = get_learn_function(args.alg)
+    if IS_DEBUG: print(f'learn: {learn}')
+
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
+    if IS_DEBUG: print(f'alg_kwargs: {alg_kwargs}')
+
     alg_kwargs.update(extra_args)
+    if IS_DEBUG: print(f'extra_args: {extra_args}')
 
     env = build_env(args)
+    if IS_DEBUG: print(f'env: {env}')
 
     if args.network:
         alg_kwargs['network'] = args.network
