@@ -46,31 +46,33 @@ _game_envs['retro'] = set([
 
 def train(args, extra_args):
     env_type, env_id = get_env_type(args.env)
-    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name}\nenv_type: {env_type}\nenv_id: {env_id}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | env_type: {env_type} | env_id: {env_id}')
 
     total_timesteps = int(args.num_timesteps)
-    if IS_DEBUG: print(f'total_timesteps: {total_timesteps}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | total_timesteps: {total_timesteps}')
     seed = args.seed
-    if IS_DEBUG: print(f'seed: {seed}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | seed: {seed}')
 
     learn = get_learn_function(args.alg)
-    if IS_DEBUG: print(f'learn: {learn}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | learn: {learn}')
 
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
-    if IS_DEBUG: print(f'alg_kwargs: {alg_kwargs}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_kwargs: {alg_kwargs}')
 
     alg_kwargs.update(extra_args)
-    if IS_DEBUG: print(f'extra_args: {extra_args}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | extra_args: {extra_args}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_kwargs: {alg_kwargs}')
 
     env = build_env(args)
-    if IS_DEBUG: print(f'env: {env}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | env: {env}')
 
     if args.network:
         alg_kwargs['network'] = args.network
     else:
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
-
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_kwargs["network"]: {alg_kwargs["network"]}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_kwargs: {alg_kwargs}')
 
 
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
@@ -92,6 +94,7 @@ def build_env(args):
     alg = args.alg
     rank = MPI.COMM_WORLD.Get_rank() if MPI else 0
     seed = args.seed
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | ncpu: {ncpu} | nenv: {nenv} | alg: {alg} | rank: {rank} | seed: {seed}')
 
     env_type, env_id = get_env_type(args.env)
     if env_type == 'mujoco':
@@ -179,6 +182,8 @@ def get_alg_module(alg, submodule=None):
         # then from rl_algs
         alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
 
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_module: {alg_module}')
+
     return alg_module
 
 
@@ -191,6 +196,8 @@ def get_learn_function_defaults(alg, env_type):
         kwargs = getattr(alg_defaults, env_type)()
     except (ImportError, AttributeError):
         kwargs = {}
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | alg_defaults: {alg_defaults}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | kwargs: {kwargs}')
     return kwargs
 
 def parse(v):

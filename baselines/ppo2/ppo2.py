@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import functools
@@ -15,6 +16,8 @@ from baselines.common.mpi_adam_optimizer import MpiAdamOptimizer
 from mpi4py import MPI
 from baselines.common.tf_util import initialize
 from baselines.common.mpi_util import sync_from_root
+
+IS_DEBUG = True
 
 class Model(object):
     def __init__(self, *, policy, ob_space, ac_space, nbatch_act, nbatch_train,
@@ -155,20 +158,20 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
             save_interval=0, load_path=None, **network_kwargs):
     '''
     Learn policy using PPO algorithm (https://arxiv.org/abs/1707.06347)
-    
+
     Parameters:
     ----------
 
     network:                          policy network architecture. Either string (mlp, lstm, lnlstm, cnn_lstm, cnn, cnn_small, conv_only - see baselines.common/models.py for full list)
-                                      specifying the standard network architecture, or a function that takes tensorflow tensor as input and returns 
+                                      specifying the standard network architecture, or a function that takes tensorflow tensor as input and returns
                                       tuple (output_tensor, extra_feed) where output tensor is the last network layer output, extra_feed is None for feed-forward
                                       neural nets, and extra_feed is a dictionary describing how to feed state into the network for recurrent neural nets.
                                       See common/models.py/lstm for more details on using recurrent nets in policies
 
-    env: baselines.common.vec_env.VecEnv     environment. Needs to be vectorized for parallel environment simulation. 
+    env: baselines.common.vec_env.VecEnv     environment. Needs to be vectorized for parallel environment simulation.
                                       The environments produced by gym.make can be wrapped using baselines.common.vec_env.DummyVecEnv class.
 
-    
+
     nsteps: int                       number of steps of the vectorized environment per update (i.e. batch size is nsteps * nenv where
                                       nenv is number of environment copies simulated in parallel)
 
@@ -176,38 +179,38 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
 
     ent_coef: float                   policy entropy coefficient in the optimization objective
 
-    lr: float or function             learning rate, constant or a schedule function [0,1] -> R+ where 1 is beginning of the 
+    lr: float or function             learning rate, constant or a schedule function [0,1] -> R+ where 1 is beginning of the
                                       training and 0 is the end of the training.
 
     vf_coef: float                    value function loss coefficient in the optimization objective
 
     max_grad_norm: float or None      gradient norm clipping coefficient
-    
+
     gamma: float                      discounting factor
 
     lam: float                        advantage estimation discounting factor (lambda in the paper)
 
     log_interval: int                 number of timesteps between logging events
 
-    nminibatches: int                 number of training minibatches per update. For recurrent policies, 
-                                      should be smaller or equal than number of environments run in parallel. 
+    nminibatches: int                 number of training minibatches per update. For recurrent policies,
+                                      should be smaller or equal than number of environments run in parallel.
 
     noptepochs: int                   number of training epochs per update
 
-    cliprange: float or function      clipping range, constant or schedule function [0,1] -> R+ where 1 is beginning of the training 
-                                      and 0 is the end of the training 
+    cliprange: float or function      clipping range, constant or schedule function [0,1] -> R+ where 1 is beginning of the training
+                                      and 0 is the end of the training
 
     save_interval: int                number of timesteps between saving events
 
     load_path: str                    path to load the model from
 
     **network_kwargs:                 keyword arguments to the policy / network builder. See baselines.common/policies.py/build_policy and arguments to a particular type of network
-                                      For instance, 'mlp' network architecture has arguments num_hidden and num_layers. 
+                                      For instance, 'mlp' network architecture has arguments num_hidden and num_layers.
 
-    
+
 
     '''
-    
+
     set_global_seeds(seed)
 
     if isinstance(lr, float): lr = constfn(lr)
@@ -217,12 +220,15 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
     total_timesteps = int(total_timesteps)
 
     policy = build_policy(env, network, **network_kwargs)
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | network_kwargs: {network_kwargs}')
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | policy: {policy}')
 
     nenvs = env.num_envs
     ob_space = env.observation_space
     ac_space = env.action_space
     nbatch = nenvs * nsteps
     nbatch_train = nbatch // nminibatches
+    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | nenvs: {nenvs} | ob_space: {ob_space} | ac_space: {ac_space} | nbatch: {nbatch} | nbatch_train: {nbatch_train}')
 
     make_model = lambda : Model(policy=policy, ob_space=ob_space, ac_space=ac_space, nbatch_act=nenvs, nbatch_train=nbatch_train,
                     nsteps=nsteps, ent_coef=ent_coef, vf_coef=vf_coef,
@@ -302,6 +308,3 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
 
 def safemean(xs):
     return np.nan if len(xs) == 0 else np.mean(xs)
-
-
-
