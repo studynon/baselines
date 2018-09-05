@@ -271,6 +271,7 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
                     mbinds = inds[start:end]
                     slices = (arr[mbinds] for arr in (obs, returns, masks, actions, values, neglogpacs))
                     mblossvals.append(model.train(lrnow, cliprangenow, *slices))
+                    if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | _: {_}  | start: {start} | len(mblossvals): {len(mblossvals)}')
         else: # recurrent version
             assert nenvs % nminibatches == 0
             envsperbatch = nenvs // nminibatches
@@ -286,7 +287,8 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
                     slices = (arr[mbflatinds] for arr in (obs, returns, masks, actions, values, neglogpacs))
                     mbstates = states[mbenvinds]
                     mblossvals.append(model.train(lrnow, cliprangenow, *slices, mbstates))
-        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals: {mblossvals}')
+        # if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals: {mblossvals}')
+        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | update: {update}')
         if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | len(mblossvals): {len(mblossvals)}')
         if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | mblossvals[-1]: {mblossvals[-1]}')
         lossvals = np.mean(mblossvals, axis=0)
