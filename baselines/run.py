@@ -16,6 +16,8 @@ from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common import atari_wrappers, retro_wrappers
 
+IS_DEBUG = True
+
 try:
     from mpi4py import MPI
 except ImportError:
@@ -44,6 +46,7 @@ _game_envs['retro'] = set([
 
 def train(args, extra_args):
     env_type, env_id = get_env_type(args.env)
+    if IS_DEBUG: print(f'env_type: {env_type}\nenv_id: {env_id}')
 
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
