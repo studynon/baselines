@@ -260,6 +260,8 @@ def learn(*, network, env, total_timesteps, seed=None, nsteps=2048, ent_coef=0.0
         obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run() #pylint: disable=E0632
         epinfobuf.extend(epinfos)
         mblossvals = []
+        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | states: {states}')
+        if IS_DEBUG: print(f'func: {sys._getframe().f_code.co_name} | noptepochs: {noptepochs} | nbatch: {nbatch} | nbatch_train: {nbatch_train}')
         if states is None: # nonrecurrent version
             inds = np.arange(nbatch)
             for _ in range(noptepochs):
